@@ -1,22 +1,38 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Code written by: Ronald Andrew Ganotisi (TR-PH-INTRN)
-# Last Update: 01/12/23 6:56PM
+# Last Update: 01/25/23 12:58 AM
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 import undetected_chromedriver as uc
 import time
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 from csv import writer
-
-def inCaptcha():
-    global bypass
-    bypass = input("Enter Y if you have solved the captcha. Enter N to cancel. \n")
+from random import randint
+from selenium.webdriver.common.by import By
 
 def nextPage():
-    global nPage
-    nPage = input("Done Scraping. Press enter if you have moved on to next page. \n Or input Q to quit. \n")
+    global page_num
+    print(f"Done on page {page_num}. Moving on to next page after a delay to prevent website from blocking the scraper.")
+    page_num += 1
+    time.sleep(randint(10,20))
+    driver.get(f"https://scamdoc.com/?page={page_num}")
+
+def is_captcha_solvable():
+    while True:
+        time.sleep(5)
+        iframe = driver.find_element("xpath", '//iframe')
+        driver.switch_to.frame(iframe)
+        ggs = driver.find_element(By.TAG_NAME, "div")
+        captcha_check = ggs.text
+        if "Verify you are human" in captcha_check:
+            print("\nCloudflare captcha detected, reloading webpage...")
+            driver.switch_to.default_content()
+            driver.refresh()
+        else:
+            driver.switch_to.default_content()
+            break
 
 def check_for_new():
     global new
@@ -27,83 +43,74 @@ def check_for_new():
             if cmp[4] == input_date:
                 new = True
 
-def enter_date():
-    while True:
-        global input_date
-        input_date = input("Enter desired analysis date in the form of MM/DD/YYYY (no spaces) below: \n")
-        temp1 = input_date.split("/")
-        if int(temp1[2]) > 2023:
-            print("Unfortunately, we don't support links in the future. \n")
-            time.sleep(1)
-            continue
-        else:
-            break
-
-def enter_new_date():
-    while True:
-        prompt1 = input("No new links found. Enter a new date? (y/n)\n")
-        if prompt1.lower() == "y":
-            print("Remember to go back to previous page to collect URLs that were passed. \n")
-            time.sleep(1)
-            enter_date()
-            break
-        else:
-            if prompt1.lower() == "n":
-                driver.delete_all_cookies()
-                time.sleep(1)
-                driver.close()
-                quit()
-            else:
-                print("Input not recognized, try again.")
-                continue
-
+def go_to_yesterday(current_date):
+    print("No new links found. Switching to yesterday's date...\n")
+    print("Going back to previous page to collect missed URLs... \n")
+    days += 1
+    new_date = datetime.now() - timedelta(days)
+    current_date = new_date.strftime("%m/%d/%Y")
+    page_num -= 1
+    time.sleep(randint(10,20))
+    driver.get(f"https://scamdoc.com/?page={page_num}")
+    return current_date
+    
 def enter_link():
     global last_link
-    print("\n Copy and paste the last URL (non-https and no spaces) to stop scraping there.")
-    last_link = input("Or leave blank to only have a constraint on the date: ")
+    last_link = input("\nCopy and paste the last URL (non-https and no spaces) to stop scraping there:")
     time.sleep(1)
     if "." in last_link:
         print(f"Scraper will halt when encountering: {last_link}")
         time.sleep(1)
     else:
-        print("No link constraint added. Proceeding...")
-        time.sleep(1)
+        print("\nNo link constraint added. Proceeding...\n")
 
 def check_for_link():
+    global end
     if cmp2[0] == last_link:
         print("Detected the last URL. Closing the scraper...")
         driver.delete_all_cookies()
         time.sleep(1)
+        print(f"Reached page {page_num} and collected {num} link(s)")
         driver.close()
+        end = time.time() - start
+        input("Press Enter to quit.")
         quit()
 
 def main():
-    global input_date, answer, new, num, contents, current_time, current_date, cmp, cmp2, title, analysis_date
+    global input_date, answer, new, num, contents, current_time, current_date, cmp, cmp2, title, analysis_date, page_num, driver, placebo, start, days
+    days = 0
+    start = time.time()
     answer = False
     new = False
     num = 0
     input_date = ""
+    page_num = 1
     current_time = datetime.now()
     current_date = current_time.strftime("%m/%d/%Y")
-    enter_date()
     enter_link()
-    driver = uc.Chrome()
+    options = uc.ChromeOptions()
+    options.add_argument("--incognito")
+    driver = uc.Chrome(use_subprocess=True)
     driver.get("https://scamdoc.com")
-    inCaptcha()
     with open("result.csv", "w") as f:
         writer_object = writer(f)
         writer_object.writerow(["First Analysis Date", "URL", "Trust Rating"])
         f.close()
     while answer == False:
-        if bypass.lower() == "y":
-            new = False
-            page_source = driver.page_source
-            soup = BeautifulSoup(page_source, "lxml")
-            rtable = soup.find("table", class_="table reports-table text-left")
+        new = False
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, "lxml")
+        rtable = soup.find("table", class_="table reports-table text-left")
+        if rtable is None:
+            is_captcha_solvable()
+            print("Captcha detected! \n")
+            placebo = input("Press Enter if you have solved the captcha.")
+            continue
+        else:
             contents = rtable.find_all("td", class_="container pdr-unset")
             check_for_new()
             if new == False:
-                enter_new_date()
+                go_to_yesterday(current_date)
                 time.sleep(1)
                 continue
             else:
@@ -112,7 +119,7 @@ def main():
                         analysis_date = content.find("span", class_="type-label")
                         temp = analysis_date.text.strip()
                         cmp = temp.split(" ")
-                        if cmp[4] == input_date:
+                        if cmp[4] == current_date:
                             temp2 = title.text.strip()
                             cmp2 = temp2.split(" ")
                             check_for_link()
@@ -127,20 +134,6 @@ def main():
                                     writer_object.writerow(output2)
                                     f.close()
             nextPage()
-            if nPage.lower() == "q":
-                print("Closing the program...")
-                driver.delete_all_cookies()
-                time.sleep(1)
-                driver.close()
-                quit()
-        else:
-            if bypass.lower() == "n":
-                answer = True
-                print("Closing...")
-                exit()
-            else:
-                print("Input not recognized, try again.")
-                inCaptcha()
 
 if __name__ == "__main__":
     main()
