@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Code written by: Ronald Andrew Ganotisi (TR-PH-INTRN)
-# Last Update: 01/25/23 12:58 AM
+# Last Update: 01/25/23 11:07 AM
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 import undetected_chromedriver as uc
@@ -12,14 +12,14 @@ from csv import writer
 from random import randint
 from selenium.webdriver.common.by import By
 
-def nextPage():
+def nextPage(): # Automatically goes to next page
     global page_num
     print(f"Done on page {page_num}. Moving on to next page after a delay to prevent website from blocking the scraper.")
     page_num += 1
     time.sleep(randint(10,20))
     driver.get(f"https://scamdoc.com/?page={page_num}")
 
-def is_captcha_solvable():
+def is_captcha_solvable(): #Checks if the captcha is from hCaptcha and reloads the webpage if not
     while True:
         time.sleep(5)
         iframe = driver.find_element("xpath", '//iframe')
@@ -34,7 +34,7 @@ def is_captcha_solvable():
             driver.switch_to.default_content()
             break
 
-def check_for_new():
+def check_for_new(): # Checks for new links based on date to determine if a date change is needed
     global new
     for content in contents:
             analysis_date = content.find("span", class_="type-label")
@@ -43,7 +43,7 @@ def check_for_new():
             if cmp[4] == input_date:
                 new = True
 
-def go_to_yesterday(current_date):
+def go_to_yesterday(current_date): # Sets the scraper to collect yesterday's date after exhuming all of current date
     print("No new links found. Switching to yesterday's date...\n")
     print("Going back to previous page to collect missed URLs... \n")
     days += 1
@@ -54,9 +54,11 @@ def go_to_yesterday(current_date):
     driver.get(f"https://scamdoc.com/?page={page_num}")
     return current_date
     
-def enter_link():
+def enter_link(): # Reads last_link.txt file to get the scraper constraint
     global last_link
-    last_link = input("\nCopy and paste the last URL (non-https and no spaces) to stop scraping there:")
+    with open("last_link.txt", "r") as f:
+        last_link = f.readline()
+        f.close()
     time.sleep(1)
     if "." in last_link:
         print(f"Scraper will halt when encountering: {last_link}")
@@ -64,7 +66,7 @@ def enter_link():
     else:
         print("\nNo link constraint added. Proceeding...\n")
 
-def check_for_link():
+def check_for_link(): # Check if the link is the last link collected since the last time the scraper has run
     global end
     if cmp2[0] == last_link:
         print("Detected the last URL. Closing the scraper...")
@@ -126,6 +128,9 @@ def main():
                             if int(cmp2[-2]) <= 30:
                                 output = [input_date, cmp2[0], f"{cmp2[-2]}%"]
                                 output2 = [input_date, f"https://{cmp2[0]}", f"{cmp2[-2]}%"]
+                                if num == 0:
+                                    with open("last_link.txt", "w") as f:
+                                        f.write(cmp2[0])
                                 num+=1
                                 print("Found " + str(num) + " links")
                                 with open("result.csv", "a", newline="") as f:
