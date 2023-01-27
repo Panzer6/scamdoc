@@ -1,6 +1,6 @@
 scamdoc.py is the beta version of the scamdoc webscraper. It gets blocked on page 8 onwards
 
-main.py is the main version of the scamdoc webscraper that needs the user's input to solve the captcha and scrape a website.
+main.py is the main version of the automatic scamdoc webscraper that only needs the user's help on solving hCaptcha.
 
 download webscrape.rar to get all things you need
 
