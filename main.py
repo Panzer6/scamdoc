@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Code written by: Ronald Andrew Ganotisi (TR-PH-INTRN)
-# Last Update: 01/25/23 11:07 AM
+# Last Update: 01/26/23 2:21 PM
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 import undetected_chromedriver as uc
@@ -14,36 +14,37 @@ from selenium.webdriver.common.by import By
 
 def nextPage(): # Automatically goes to next page
     global page_num
-    print(f"Done on page {page_num}. Moving on to next page after a delay to prevent website from blocking the scraper.")
+    print(f"\nDone on page {page_num} with first analysis date {current_date}.\nMoving on to next page after a delay to prevent website from blocking the scraper.\n")
     page_num += 1
     time.sleep(randint(10,20))
     driver.get(f"https://scamdoc.com/?page={page_num}")
 
 def is_captcha_solvable(): #Checks if the captcha is from hCaptcha and reloads the webpage if not
     while True:
-        time.sleep(5)
+        time.sleep(3)
+        driver.implicitly_wait(5)
         iframe = driver.find_element("xpath", '//iframe')
         driver.switch_to.frame(iframe)
-        ggs = driver.find_element(By.TAG_NAME, "div")
-        captcha_check = ggs.text
-        if "Verify you are human" in captcha_check:
+        try: 
+            ggs = driver.find_element(By.CLASS_NAME, "logo-graphic")
+            driver.switch_to.default_content()
+            break
+        except:
             print("\nCloudflare captcha detected, reloading webpage...")
             driver.switch_to.default_content()
             driver.refresh()
-        else:
-            driver.switch_to.default_content()
-            break
-
+            
 def check_for_new(): # Checks for new links based on date to determine if a date change is needed
     global new
     for content in contents:
             analysis_date = content.find("span", class_="type-label")
             temp = analysis_date.text.strip()
             cmp = temp.split(" ")
-            if cmp[4] == input_date:
+            if cmp[4] == current_date:
                 new = True
 
-def go_to_yesterday(current_date): # Sets the scraper to collect yesterday's date after exhuming all of current date
+def go_to_yesterday(): # Sets the scraper to collect yesterday's date after exhuming all of current date
+    global days, page_num, current_date
     print("No new links found. Switching to yesterday's date...\n")
     print("Going back to previous page to collect missed URLs... \n")
     days += 1
@@ -52,7 +53,6 @@ def go_to_yesterday(current_date): # Sets the scraper to collect yesterday's dat
     page_num -= 1
     time.sleep(randint(10,20))
     driver.get(f"https://scamdoc.com/?page={page_num}")
-    return current_date
     
 def enter_link(): # Reads last_link.txt file to get the scraper constraint
     global last_link
@@ -105,14 +105,14 @@ def main():
         rtable = soup.find("table", class_="table reports-table text-left")
         if rtable is None:
             is_captcha_solvable()
-            print("Captcha detected! \n")
+            print("hCaptcha detected! \n")
             placebo = input("Press Enter if you have solved the captcha.")
             continue
         else:
             contents = rtable.find_all("td", class_="container pdr-unset")
             check_for_new()
             if new == False:
-                go_to_yesterday(current_date)
+                go_to_yesterday()
                 time.sleep(1)
                 continue
             else:
@@ -126,9 +126,9 @@ def main():
                             cmp2 = temp2.split(" ")
                             check_for_link()
                             if int(cmp2[-2]) <= 30:
-                                output = [input_date, cmp2[0], f"{cmp2[-2]}%"]
-                                output2 = [input_date, f"https://{cmp2[0]}", f"{cmp2[-2]}%"]
-                                if num == 0:
+                                output = [current_date, cmp2[0], f"{cmp2[-2]}%"]
+                                output2 = [current_date, f"https://{cmp2[0]}", f"{cmp2[-2]}%"]
+                                if num == 0: # Write the first link collected to "last_link.txt"
                                     with open("last_link.txt", "w") as f:
                                         f.write(cmp2[0])
                                 num+=1
