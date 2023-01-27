@@ -1,3 +1,3 @@
 main.py is the main version of the automatic scamdoc webscraper that only needs the user's help on solving hCaptcha.
 
-twitter.py is an ongoing project for twitterphishing scraping.
+download main branch zip to get all requirements and don't forget to read the readme.txt
