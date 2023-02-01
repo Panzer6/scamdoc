@@ -23,9 +23,9 @@ def is_captcha_solvable(): #Checks if the captcha is from hCaptcha and reloads t
     while True:
         time.sleep(3)
         driver.implicitly_wait(5)
-        iframe = driver.find_element("xpath", '//iframe')
-        driver.switch_to.frame(iframe)
-        try: 
+        try:
+            iframe = driver.find_element("xpath", '//iframe')
+            driver.switch_to.frame(iframe)
             ggs = driver.find_element(By.CLASS_NAME, "logo-graphic")
             driver.switch_to.default_content()
             break
