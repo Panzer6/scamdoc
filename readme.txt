@@ -1,19 +1,19 @@
+Installation:
+
+1. Run "pipinstall.bat"
+2. Run "cloudflarefix.bat"
+3. Proceed to the instructions
+
 Instructions:
+
+0. (Only required for first-time use) Place last link collected in "last_link.txt"
 
 1. Open run.bat
 
-2. Wait for hCaptcha to load.
+2. Chrome Browser will open and user should click "Verify" on Cloudflare turnstile captcha.
 
-3. Solve the hCaptcha.
+3. Upon entering scamdoc, go back to command prompt and press enter to start scraping.
 
-4. Press Enter after hCaptcha is solved and webpage has loaded.
+Note: After a while, the website will give another captcha. The scraper will recognize this and will notify the user in the command prompt. In this case, go back to step 2.
 
-5. Wait for scraper to detect another captcha and solve it 
 
-6. After scraper has detected last link, it will output how many links collected as well as what page it stopped.
-
-7. Press Enter again to exit.
-
-IMPORTANT:
-
-Do not solve hCaptcha fast since it will not let you in the website. Add a delay between clicks of pictures to ensure entry to the website.
