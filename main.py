@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 # Code written by: Ronald Andrew Ganotisi (TR-PH-INTRN)
-# Last Update: 01/26/23 2:21 PM
+# Last Update: 02/01/23 1:11 PM
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
 import undetected_chromedriver.v2 as uc
@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 import re
 from csv import writer
 from random import randint
-from selenium.webdriver.common.by import By
 
 def nextPage(): # Automatically goes to next page
     global page_num
