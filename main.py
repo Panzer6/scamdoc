@@ -3,7 +3,7 @@
 # Last Update: 01/26/23 2:21 PM
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 
-import undetected_chromedriver as uc
+import undetected_chromedriver.v2 as uc
 import time
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
@@ -16,24 +16,9 @@ def nextPage(): # Automatically goes to next page
     global page_num
     print(f"\nDone on page {page_num} with first analysis date {current_date}.\nMoving on to next page after a delay to prevent website from blocking the scraper.\n")
     page_num += 1
-    time.sleep(randint(10,20))
+    time.sleep(randint(5,10))
     driver.get(f"https://scamdoc.com/?page={page_num}")
-
-def is_captcha_solvable(): #Checks if the captcha is from hCaptcha and reloads the webpage if not
-    while True:
-        time.sleep(3)
-        driver.implicitly_wait(5)
-        try:
-            iframe = driver.find_element("xpath", '//iframe')
-            driver.switch_to.frame(iframe)
-            ggs = driver.find_element(By.CLASS_NAME, "logo-graphic")
-            driver.switch_to.default_content()
-            break
-        except:
-            print("\nCloudflare captcha detected, reloading webpage...")
-            driver.switch_to.default_content()
-            driver.refresh()
-            
+           
 def check_for_new(): # Checks for new links based on date to determine if a date change is needed
     global new
     for content in contents:
@@ -75,7 +60,7 @@ def check_for_link(): # Check if the link is the last link collected since the l
         print(f"Reached page {page_num} and collected {num} link(s)")
         driver.close()
         end = time.time() - start
-        input("Press Enter to quit.")
+        print(f"Time Elapsed: {end}")
         quit()
 
 def main():
@@ -104,9 +89,8 @@ def main():
         soup = BeautifulSoup(page_source, "lxml")
         rtable = soup.find("table", class_="table reports-table text-left")
         if rtable is None:
-            is_captcha_solvable()
-            print("hCaptcha detected! \n")
-            placebo = input("Press Enter if you have solved the captcha.")
+            print("\nCloudflare turnstile detected, please verify before continuing.\n")
+            placebo = input("Press Enter after scamdoc site is loaded.")
             continue
         else:
             contents = rtable.find_all("td", class_="container pdr-unset")
